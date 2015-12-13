@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="bustime-response" type="bustime-response"/>
+	<xs:complexType name="bustime-response">
+		<xs:sequence>
+			<xs:element name="error" type="error" minOccurs="0"
+				maxOccurs="unbounded"/>
+			<xs:element name="vehicle" type="vehicle" minOccurs="0"
+				maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="error">
+		<xs:sequence>
+			<xs:element name="vid" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="rt" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="msg" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="vehicle">
+		<xs:sequence>
+			<xs:element name="vid" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="tmpstmp" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="lat" type="xs:double" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="lon" type="xs:double" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="hdg" type="xs:int" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="pid" type="xs:int" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="pdist" type="xs:int" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="rt" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="des" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="dly" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="srvtmstmp" type="xs:string" minOccurs="0"
+				maxOccurs="1"/>
+			<xs:element name="spd" type="xs:int" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="blk" type="xs:int" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="tablockid" type="xs:string" minOccurs="1"
+				maxOccurs="1"/>
+			<xs:element name="tatripid" type="xs:string" minOccurs="1"
+				maxOccurs="1"/>
+			<xs:element name="zone" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
