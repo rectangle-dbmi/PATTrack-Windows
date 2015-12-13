@@ -23,6 +23,7 @@ using Windows.Devices.Geolocation;
 using System.Reactive.Concurrency;
 using Windows.UI.Core;
 using Windows.ApplicationModel.Resources;
+using Windows.ApplicationModel;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -33,71 +34,84 @@ namespace PATTrack
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private const string baseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
+        private static IDisposable subscription;
 
         public MainPage()
         {
             this.InitializeComponent();
-        //    this.KeyDown += MainPage_KeyDown;
+            Application.Current.Suspending += new SuspendingEventHandler(OnAppSuspending);
+            Application.Current.Resuming += new EventHandler<object>(OnAppResuming);
             Setup();
         }
 
-        //private void MainPage_KeyDown(object sender, KeyRoutedEventArgs e)
-        //{
-        //}
+        private void OnAppResuming(object sender, object e)
+        {
+            Setup();
+        }
+
+        private void OnAppSuspending(object sender, SuspendingEventArgs e)
+        {
+            subscription.Dispose();
+            map.MapElements.Clear();
+        }
 
         private void Setup()
         {
             var loader = new ResourceLoader();
             var api_key = loader.GetString("PAT_KEY");
-            var test = Observable.FromEventPattern(this, "KeyDown")
-                                 .Select(x => (long)1)
-                                 .Throttle(new TimeSpan(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 300))
-                                 .Select(l => new string[] { "58", "71C" });
-            var obs = Observable.Interval(TimeSpan.FromSeconds(10))
-                                .Select(l => new string[] { "28X", "61B", "54C" })
-                                .Merge(test)
-                                .Select(x => GetBustimeResponse(x, api_key).vehicle);
-            var subscription = obs.SubscribeOn(NewThreadScheduler.Default)
+            var userInput = Observable.FromEventPattern(this, "KeyDown")
+                                      .Throttle(new TimeSpan(days: 0
+                                                             ,hours: 0
+                                                             ,minutes: 0
+                                                             ,seconds: 0
+                                                             ,milliseconds: 300))
+                                      .Select(l => new string[] { "58", "71C" });
+
+            var timed = Observable.Interval(TimeSpan.FromSeconds(10))
+                                  .Select(l => new string[] { "28X", "61B", "54C" });
+
+            var vehicles = timed.Merge(userInput)
+                                .Select(x => GetBustimeResponse(x, api_key).vehicle)
+                                .Publish()
+                                .RefCount();
+
+            subscription = vehicles.SubscribeOn(NewThreadScheduler.Default)
                                   .ObserveOnDispatcher()
-                                  .Subscribe(onNext: x => {
-                                                map.MapElements.Clear();
-                                                AddMapIcons(x);
-                                            }
-                                            ,onError: ex => { } 
-                                            ,onCompleted: () => { } );
+                                  .Subscribe(onNext: x =>
+                                  {
+                                      map.MapElements.Clear();
+                                      AddMapIcons(x);
+                                  }
+                                  ,onError: ex => { } 
+                                  ,onCompleted: () => { } );
         }
 
         private void AddMapIcons(vehicle[] vehicles)
         {
-            var icons = vehicles.Select(v =>
+            foreach (var v in vehicles)
             {
                 MapIcon mi = new MapIcon();
                 mi.Location = new Geopoint(new BasicGeoposition() { Latitude = v.lat, Longitude = v.lon });
                 mi.NormalizedAnchorPoint = new Point(0.5, 1.0);
                 mi.Title = v.rt;
-                return mi;
-            });
-
-            foreach (var i in icons)
-            {
-                map.MapElements.Add(i);
+                map.MapElements.Add(mi);
             }
         }
 
         private static bustimeresponse GetBustimeResponse(string[] routes, string api_key)
         {
-            string requestUrl = CreateRequest("getvehicles?key=" + api_key + "&rt=" + routes.Aggregate((a,b)=> a + "," + b));
+            string requestUrl = CreateRequest(String.Format("getvehicles?key={0}&rt={1}",
+                api_key,
+                routes.Aggregate((a,b)=> a + "," + b)));
             var responseStream = MakeRequest(requestUrl);
-
             XmlSerializer serializer = new XmlSerializer(typeof(bustimeresponse));
             return serializer.Deserialize(responseStream) as bustimeresponse;
         }
 
         public static string CreateRequest(string queryString)
         {
-            string UrlRequest = "http://truetime.portauthority.org/bustime/api/v2/" +
-                                 queryString +
-                                 "&format=xml";
+            string UrlRequest = baseUrl + queryString + @"&format=xml";
             return (UrlRequest);
         }
 
