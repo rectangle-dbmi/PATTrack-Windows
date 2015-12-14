@@ -90,7 +90,7 @@
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <None Include="project.json" />
-    <None Include="BusTimeResponse.xsd">
+    <None Include="PATAPI\BusTimeResponse.xsd">
       <SubType>Designer</SubType>
     </None>
     <PRIResource Include="Strings\Resources.resw" />
@@ -103,7 +103,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BusTimeResponse.cs">
+    <Compile Include="PATAPI\BusTimeResponse.cs">
       <DependentUpon>BusTimeResponse.xsd</DependentUpon>
     </Compile>
   </ItemGroup>
