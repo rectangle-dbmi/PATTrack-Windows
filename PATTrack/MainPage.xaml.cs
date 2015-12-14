@@ -1,37 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-using System.Xml;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using Windows.UI.Xaml.Controls.Maps;
-using Windows.Devices.Geolocation;
-using System.Reactive.Concurrency;
-using Windows.UI.Core;
-using Windows.ApplicationModel.Resources;
-using Windows.ApplicationModel;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
-
-namespace PATTrack
+﻿namespace PATTrack
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Reactive.Concurrency;
+    using System.Reactive.Linq;
+    using System.Xml;
+    using System.Xml.Serialization;
+    using Windows.ApplicationModel;
+    using Windows.ApplicationModel.Resources;
+    using Windows.Devices.Geolocation;
+    using Windows.Foundation;
+    using Windows.Phone.UI.Input;
+    using Windows.UI.Xaml;
+    using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Controls.Maps;
+
     public sealed partial class MainPage : Page
     {
         private const string baseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
@@ -42,7 +30,17 @@ namespace PATTrack
             this.InitializeComponent();
             Application.Current.Suspending += new SuspendingEventHandler(OnAppSuspending);
             Application.Current.Resuming += new EventHandler<object>(OnAppResuming);
+            if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
+            {
+                HardwareButtons.BackPressed += HardwareButtons_BackPressed; 
+            }
+
             Setup();
+        }
+
+        private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void OnAppResuming(object sender, object e)
