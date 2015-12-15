@@ -15,7 +15,9 @@
     using Windows.ApplicationModel.Resources;
     using Windows.Devices.Geolocation;
     using Windows.Foundation;
+    using Windows.Foundation.Diagnostics;
     using Windows.Phone.UI.Input;
+    using Windows.Storage;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Controls.Maps;
@@ -24,6 +26,8 @@
     {
         private const string baseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
         private static IDisposable subscription;
+        private static readonly LoggingChannel log = LoggingSingleton.Instance.channel;
+        private static readonly LoggingSession logSession = LoggingSingleton.Instance.session;
 
         public MainPage()
         {
@@ -34,7 +38,6 @@
             {
                 HardwareButtons.BackPressed += HardwareButtons_BackPressed; 
             }
-
             Setup();
         }
 
@@ -45,11 +48,14 @@
 
         private void OnAppResuming(object sender, object e)
         {
+            log.LogMessage("Resuming");
             Setup();
         }
 
-        private void OnAppSuspending(object sender, SuspendingEventArgs e)
+        private async void OnAppSuspending(object sender, SuspendingEventArgs e)
         {
+            log.LogMessage("Suspending");
+            await logSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logFile.etl");
             subscription.Dispose();
             map.MapElements.Clear();
         }
@@ -81,8 +87,14 @@
                                       map.MapElements.Clear();
                                       AddMapIcons(x);
                                   }
-                                  ,onError: ex => { } 
-                                  ,onCompleted: () => { } );
+                                  ,onError: ex => 
+                                  {
+                                      log.LogMessage(ex.Message);
+                                  } 
+                                  ,onCompleted: () =>
+                                  {
+                                      log.LogMessage("Vehicle observable completed");
+                                  } );
         }
 
         private void AddMapIcons(vehicle[] vehicles)
@@ -99,34 +111,14 @@
 
         private static bustimeresponse GetBustimeResponse(string[] routes, string api_key)
         {
-            string requestUrl = CreateRequest(String.Format("getvehicles?key={0}&rt={1}",
+            string requestUrl = String.Format("{0}getvehicles?key={1}&rt={2}&format=xml",
+                baseUrl,
                 api_key,
-                routes.Aggregate((a,b)=> a + "," + b)));
-            var responseStream = MakeRequest(requestUrl);
+                routes.Aggregate((a,b)=> a + "," + b));
+            var responseStream = PATAPI.MakeRequest(requestUrl);
             XmlSerializer serializer = new XmlSerializer(typeof(bustimeresponse));
             return serializer.Deserialize(responseStream) as bustimeresponse;
         }
 
-        public static string CreateRequest(string queryString)
-        {
-            string UrlRequest = baseUrl + queryString + @"&format=xml";
-            return (UrlRequest);
-        }
-
-        public static Stream MakeRequest(string requestUrl)
-        {
-            try
-            {
-                HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
-                WebResponse response = request.GetResponseAsync().Result;
-
-                XmlDocument xmlDoc = new XmlDocument();
-                return response.GetResponseStream();
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
-        }
     }
 }
