@@ -71,7 +71,7 @@
                                                              , seconds: 0
                                                              , milliseconds: 300));
 
-            var timed = Observable.Interval(TimeSpan.FromSeconds(10));
+            var timed = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(10));
 
             var vehicles = userInput.CombineLatest(timed, (ui,time) => ui)
                                 .Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
