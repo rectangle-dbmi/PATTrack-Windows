@@ -7,11 +7,23 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
     mc:Ignorable="d">
-    <StackPanel>
+    <StackPanel Orientation="Horizontal">
+        <ListView
+            SelectionMode="Multiple"
+            x:Name="listview">
+            <ListViewItem>61A</ListViewItem>
+            <ListViewItem>61B</ListViewItem>
+            <ListViewItem>61C</ListViewItem>
+            <ListViewItem>61D</ListViewItem>
+            <ListViewItem>71A</ListViewItem>
+            <ListViewItem>28X</ListViewItem>
+            <ListViewItem>58</ListViewItem>
+            <ListViewItem>54</ListViewItem>
+        </ListView>
         <Maps:MapControl
             x:Uid="mc"
             x:Name="map"
-            Height="560"
-            Margin="0,0,0,0" />
+            Margin="0,0,0,0"
+            Width="500"/>
     </StackPanel>
 </Page>

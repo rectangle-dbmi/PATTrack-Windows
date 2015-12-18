@@ -35,6 +35,10 @@ namespace PATTrack
 
         public async static Task<bustimeresponse> GetBustimeResponse(string[] routes, string api_key)
         {
+            if (routes.Length == 0)
+            {
+                return new bustimeresponse();
+            }
             string requestUrl = String.Format("{0}getvehicles?key={1}&rt={2}&format=xml",
                 baseUrl,
                 api_key,

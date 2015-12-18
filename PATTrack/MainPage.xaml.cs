@@ -6,7 +6,7 @@
     using System.Reactive.Linq;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Resources;
-    using Windows.Foundation.Diagnostics;
+    using Windows.Foundation.Diagnostics;  
     using Windows.Phone.UI.Input;
     using Windows.Storage;
     using Windows.UI.Xaml;
@@ -55,15 +55,15 @@
         {
             var loader = new ResourceLoader();
             var api_key = loader.GetString("PAT_KEY");
-
+            
             //placeholder keyboard event until there's a listview of buses with a click event
-            var userInput = Observable.FromEventPattern(this, "KeyDown")
+            var userInput = Observable.FromEventPattern(listview, "SelectionChanged")
                                       .Select(k =>
                                       {
-                                          if (((KeyRoutedEventArgs)k.EventArgs).Key == Windows.System.VirtualKey.A)
-                                              return new string[] { "61A", "61B", "61C", "61D" };
-                                          else
-                                              return new string[] { "28X", "54" };
+                                          //if (((KeyRoutedEventArgs)k.EventArgs).Key == Windows.System.VirtualKey.A)
+                                           //   return new string[] { "61A", "61B", "61C", "61D" };
+                                          //else
+                                              return listview.SelectedItems.Select(x => ((ListViewItem)x).Content.ToString()).ToArray();
                                       })
                                       .Throttle(new TimeSpan(days: 0
                                                              , hours: 0

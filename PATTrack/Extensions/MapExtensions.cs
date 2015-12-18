@@ -9,6 +9,11 @@
 
         internal static void AddBusIcons(this MapControl map, vehicle[] vehicles)
         {
+            if (vehicles == null)
+            {
+                return;
+            }
+
             foreach (var v in vehicles)
             {
                 MapIcon mi = new MapIcon();
