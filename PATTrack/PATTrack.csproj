@@ -100,6 +100,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\MapExtensions.cs" />
+    <Compile Include="Extensions\ObservableExtensions.cs" />
     <Compile Include="PATAPI\PATAPI.cs" />
     <Compile Include="LoggingSingleton.cs" />
     <Compile Include="MainPage.xaml.cs">

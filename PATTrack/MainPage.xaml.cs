@@ -57,23 +57,21 @@
             var api_key = loader.GetString("PAT_KEY");
 
             //placeholder keyboard event until there's a listview of buses with a click event
-            var userInput = Observable.FromEventPattern(listview, "SelectionChanged")
+            var listState = Observable.FromEventPattern(listview, "SelectionChanged")
                                       .Select(k =>
                                       {
-                                          var list = listview.SelectedItems
-                                                             .Select(i => ((ListViewItem)i).Content.ToString())
-                                                             .ToArray();
-                                          return Observable.Timer(TimeSpan.Zero,TimeSpan.FromSeconds(10))
-                                                           .Select(l => list);
-                                     })
+                                          return listview.SelectedItems
+                                                         .Select(i => ((ListViewItem)i).Content.ToString())
+                                                         .ToArray();
+                                      })
                                       .Throttle(new TimeSpan(days: 0
                                                              , hours: 0
                                                              , minutes: 0
                                                              , seconds: 0
-                                                             , milliseconds: 300))
-                                      .Switch();
+                                                             , milliseconds: 300));
 
-            var vehicles = userInput.Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
+            var vehicles = listState.Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
+                                    .ResetTimer(TimeSpan.Zero, TimeSpan.FromSeconds(10))
                                     .Publish()
                                     .RefCount();
 
