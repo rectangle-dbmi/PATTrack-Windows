@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="bustime-response" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="bustime-response">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="ptr">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="pid" type="xs:string" minOccurs="0" />
+              <xs:element name="ln" type="xs:string" minOccurs="0" />
+              <xs:element name="rtdir" type="xs:string" minOccurs="0" />
+              <xs:element name="pt" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="seq" type="xs:string" minOccurs="0" />
+                    <xs:element name="lat" type="xs:string" minOccurs="0" />
+                    <xs:element name="lon" type="xs:string" minOccurs="0" />
+                    <xs:element name="typ" type="xs:string" minOccurs="0" />
+                    <xs:element name="stpid" type="xs:string" minOccurs="0" />
+                    <xs:element name="stpnm" type="xs:string" minOccurs="0" />
+                    <xs:element name="pdist" type="xs:string" minOccurs="0" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -13,6 +13,9 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
     using PATTrack.Extensions;
+    using Windows.Devices.Geolocation;
+    using Windows.UI.Xaml.Controls.Maps;
+    using Windows.UI;
     public sealed partial class MainPage : Page
     {
 
@@ -53,8 +56,6 @@
 
         private void Setup()
         {
-            var loader = new ResourceLoader();
-            var api_key = loader.GetString("PAT_KEY");
 
             //placeholder keyboard event until there's a listview of buses with a click event
             var userInput = Observable.FromEventPattern(this, "KeyDown")
@@ -74,7 +75,7 @@
             var timed = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(10));
 
             var vehicles = userInput.CombineLatest(timed, (ui,time) => ui)
-                                .Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
+                                .Select(async xs => (await PATAPI.GetBustimeResponse(xs)).vehicle)
                                 .Publish()
                                 .RefCount();
 
@@ -86,14 +87,29 @@
                                            map.MapElements.Clear();
                                            map.AddBusIcons(await x);
                                        }
-                                       ,onError: ex => 
+                                       , onError: ex => 
                                        {
                                            log.LogMessage(ex.Message);
                                        } 
-                                       ,onCompleted: () =>
+                                       , onCompleted: () =>
                                        {
                                            log.LogMessage("Vehicle observable completed");
                                        } );
+        }
+
+        private async System.Threading.Tasks.Task AddPolyline(string route)
+        {
+            var paths = from ptr in (await PATAPI.GetPatterns(route)).Items
+                        select from pt in ptr.pt
+                               select new BasicGeoposition() { Latitude = Double.Parse(pt.lat), Longitude = Double.Parse(pt.lon) };
+            foreach (var path in paths)
+            {
+                var polyline = new MapPolyline();
+                polyline.Path = new Geopath(path);
+                polyline.StrokeColor = Colors.Blue;
+                polyline.Visible = true;
+                map.MapElements.Add(polyline);
+            }
         }
     }
 }
