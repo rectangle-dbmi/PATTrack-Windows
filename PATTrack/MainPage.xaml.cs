@@ -55,28 +55,27 @@
         {
             var loader = new ResourceLoader();
             var api_key = loader.GetString("PAT_KEY");
-            
+
             //placeholder keyboard event until there's a listview of buses with a click event
             var userInput = Observable.FromEventPattern(listview, "SelectionChanged")
                                       .Select(k =>
                                       {
-                                          //if (((KeyRoutedEventArgs)k.EventArgs).Key == Windows.System.VirtualKey.A)
-                                           //   return new string[] { "61A", "61B", "61C", "61D" };
-                                          //else
-                                              return listview.SelectedItems.Select(x => ((ListViewItem)x).Content.ToString()).ToArray();
-                                      })
+                                          var list = listview.SelectedItems
+                                                             .Select(i => ((ListViewItem)i).Content.ToString())
+                                                             .ToArray();
+                                          return Observable.Timer(TimeSpan.Zero,TimeSpan.FromSeconds(10))
+                                                           .Select(l => list);
+                                     })
                                       .Throttle(new TimeSpan(days: 0
                                                              , hours: 0
                                                              , minutes: 0
                                                              , seconds: 0
-                                                             , milliseconds: 300));
+                                                             , milliseconds: 300))
+                                      .Switch();
 
-            var timed = Observable.Interval(TimeSpan.FromSeconds(10));
-
-            var vehicles = userInput.CombineLatest(timed, (ui,time) => ui)
-                                .Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
-                                .Publish()
-                                .RefCount();
+            var vehicles = userInput.Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
+                                    .Publish()
+                                    .RefCount();
 
             subscription = vehicles.SubscribeOn(NewThreadScheduler.Default)
                                    .ObserveOnDispatcher()
