@@ -70,8 +70,10 @@
                                                              , seconds: 0
                                                              , milliseconds: 300));
 
-            var vehicles = listState.Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
-                                    .ResetTimer(TimeSpan.Zero, TimeSpan.FromSeconds(10))
+            var vehicles = listState.Select(x => from t in Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(10))
+                                                 select x)
+                                    .Switch()
+                                    .Select(async xs => (await PATAPI.GetBustimeResponse(xs, api_key)).vehicle)
                                     .Publish()
                                     .RefCount();
 
