@@ -3,10 +3,9 @@
     using Windows.Devices.Geolocation;
     using Windows.Foundation;
     using Windows.UI.Xaml.Controls.Maps;
-
+    using PATAPI.POCO;
     public static class MapExtensions
     {
-
         internal static void AddBusIcons(this MapControl map, vehicle[] vehicles)
         {
             if (vehicles == null)
