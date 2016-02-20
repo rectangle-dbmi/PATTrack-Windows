@@ -1,10 +1,51 @@
 ﻿namespace PATTrack.PATAPI.POCO
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Xml.Linq;
+    using Windows.Foundation.Diagnostics;
     public struct BustimeVehicleResponse : Response
     {
         public error[] error { get; set; }
 
         public vehicle[] vehicle { get; set; }
+
+        public Exception ResponseError { get; set; }
+
+        public static BustimeVehicleResponse ParseResponse(XDocument doc)
+        {
+            try
+            {
+                return new BustimeVehicleResponse()
+                {
+                    vehicle = (from d in doc.Descendants("vehicle")
+                               select new vehicle
+                               {
+                                   lat = double.Parse(d.Element("lat")?.Value),
+                                   lon = double.Parse(d.Element("lon")?.Value),
+                                   rt = d.Element("rt")?.Value,
+                                   pid = int.Parse(d.Element("pid")?.Value),
+                                   vid = d.Element("vid")?.Value
+                               }).ToArray(),
+                    error = (from d in doc.Descendants("error")
+                             select new error
+                             {
+                                 rt = d.Element("rt")?.Value,
+                                 vid = d.Element("vid")?.Value,
+                                 msg = d.Element("msg")?.Value
+                             }).ToArray()
+                };
+            }
+            catch (Exception ex)
+            {
+                LoggingSingleton.Instance.channel.LogMessage("Exception in Response.ParseResponse", LoggingLevel.Error);
+                LoggingSingleton.Instance.channel.LogMessage(ex.StackTrace, LoggingLevel.Verbose);
+                LoggingSingleton.Instance.channel.LogMessage(doc.ToString(), LoggingLevel.Verbose);
+                ex.Data["XmlResponse"] = doc.ToString();
+                return new BustimeVehicleResponse() { ResponseError = ex };
+            }
+        }
     }
 
     public struct error {

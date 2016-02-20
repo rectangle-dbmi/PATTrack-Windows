@@ -1,28 +1,28 @@
-﻿using PATTrack.PATAPI.POCO;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-using Windows.Devices.Geolocation;
-using Windows.Foundation.Diagnostics;
-using Windows.UI.Xaml.Controls.Maps;
-
-namespace PATTrack.PATAPI
+﻿namespace PATTrack.PATAPI
 {
+    using PATTrack.PATAPI.POCO;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Threading.Tasks;
+    using System.Xml;
+    using System.Xml.Linq;
+    using Windows.Devices.Geolocation;
+    using Windows.Foundation.Diagnostics;
+    using Windows.UI.Xaml.Controls.Maps;
+
     public class PAT_API
     {
         private const string baseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
+
         private async static Task<Stream> MakeRequest(string requestUrl)
         {
             try
             {
                 HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
                 WebResponse response = await request.GetResponseAsync();
-
                 XmlDocument xmlDoc = new XmlDocument();
                 var f = LoggingSingleton.Instance;
                 LoggingSingleton.Instance.channel.LogMessage("request made",LoggingLevel.Critical);
@@ -42,27 +42,35 @@ namespace PATTrack.PATAPI
                 api_key,
                 route);
             var responseStream = await PAT_API.MakeRequest(requestUrl);
-            return (PatternResponse) Parser.ParseResponse(XDocument.Load(responseStream),
-                typeof(PatternResponse));
+            return PatternResponse.ParseResponse(XDocument.Load(responseStream));
         }
 
         public async static Task<BustimeVehicleResponse> GetBustimeResponse(string[] routes, string api_key)
         {
             if (routes.Length == 0)
             {
-                return new BustimeVehicleResponse();
+                return new BustimeVehicleResponse()
+                {
+                    ResponseError = new Exception("Routes array must contain at least one element")
+                };
             }
+
             string requestUrl = String.Format("{0}getvehicles?key={1}&rt={2}&format=xml",
                 baseUrl,
                 api_key,
                 routes.Aggregate((a, b) => a + "," + b));
             var responseStream = await PAT_API.MakeRequest(requestUrl);
-            return (BustimeVehicleResponse) Parser.ParseResponse(XDocument.Load(responseStream),
-                typeof(BustimeVehicleResponse));
+            return BustimeVehicleResponse.ParseResponse(XDocument.Load(responseStream));
         }
 
         public static async Task<List<MapPolyline>> GetPolylines(string rt, string api_key) {
             PatternResponse patternResponse = await PAT_API.GetPatterns(rt, api_key);
+
+            if (patternResponse.ResponseError != null)
+            {
+                return new List<MapPolyline>() { };
+            }
+
             return patternResponse.patterns.Select(pat =>
             {
                 var points = from pt in pat.pts

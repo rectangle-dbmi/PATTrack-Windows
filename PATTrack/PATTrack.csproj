@@ -103,7 +103,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="PATAPI\POCO\BustimeVehicleResponse.cs" />
-    <Compile Include="PATAPI\POCO\Patterns.cs" />
+    <Compile Include="PATAPI\POCO\PatternResponse.cs" />
     <Compile Include="PATAPI\POCO\Response.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
