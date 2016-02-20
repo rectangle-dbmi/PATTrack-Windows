@@ -89,32 +89,23 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="PATAPI\pattern.xsd">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="project.json" />
-    <None Include="PATAPI\BusTimeResponse.xsd">
-      <SubType>Designer</SubType>
-    </None>
     <PRIResource Include="Strings\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Extensions\MapExtensions.cs" />
+    <Compile Include="BusMap.cs" />
     <Compile Include="PATAPI\PATAPI.cs" />
     <Compile Include="LoggingSingleton.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PATAPI\pattern.cs">
-      <DependentUpon>pattern.xsd</DependentUpon>
-    </Compile>
+    <Compile Include="PATAPI\POCO\BustimeVehicleResponse.cs" />
+    <Compile Include="PATAPI\POCO\Patterns.cs" />
+    <Compile Include="PATAPI\POCO\Response.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PATAPI\BusTimeResponse.cs">
-      <DependentUpon>BusTimeResponse.xsd</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -156,7 +147,10 @@
       <Name>Windows Mobile Extensions for the UWP</Name>
     </SDKReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+    <Folder Include="NewFolder1\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
