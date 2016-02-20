@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
-    public struct PatternResponse : Response
+    public class PatternResponse : Response
     {
         public List<Pattern> patterns { get; set; }
 
@@ -46,13 +46,13 @@
         }
     }
 
-    public struct Pattern
+    public class Pattern
     {
         public string pid { get; set; }
         public IEnumerable<Pt> pts { get; set; }
     }
 
-    public struct Pt
+    public class Pt
     {
           public int seq{ get; set; }
           public double lat{ get; set; }

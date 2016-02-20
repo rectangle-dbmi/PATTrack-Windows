@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
-    public struct BustimeVehicleResponse : Response
+    public class BustimeVehicleResponse : Response
     {
         public error[] error { get; set; }
 
@@ -48,7 +48,7 @@
         }
     }
 
-    public struct error {
+    public class error {
         
         public string vid { get; set; }
         
@@ -57,7 +57,7 @@
         public string msg { get; set; }
     }
 
-    public struct vehicle {
+    public class vehicle {
         
         public string vid { get; set; }
         
