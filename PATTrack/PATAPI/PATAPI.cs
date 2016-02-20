@@ -1,15 +1,15 @@
-﻿using System;
+﻿using PATTrack.PATAPI.POCO;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using Windows.Foundation.Diagnostics;
-using PATTrack.PATAPI.POCO;
-using System.Collections.Generic;
-using Windows.UI.Xaml.Controls.Maps;
 using Windows.Devices.Geolocation;
+using Windows.Foundation.Diagnostics;
+using Windows.UI.Xaml.Controls.Maps;
 
 namespace PATTrack.PATAPI
 {
@@ -35,7 +35,7 @@ namespace PATTrack.PATAPI
             }
         }
 
-        public async static Task<PatternResponse> GetPatterns(string route, string api_key)
+        private async static Task<PatternResponse> GetPatterns(string route, string api_key)
         {
             string requestUrl = String.Format("{0}getpatterns?key={1}&rt={2}&format=xml",
                 baseUrl,
@@ -60,6 +60,7 @@ namespace PATTrack.PATAPI
             return (BustimeVehicleResponse) Parser.ParseResponse(XDocument.Load(responseStream),
                 typeof(BustimeVehicleResponse));
         }
+
         public static async Task<List<MapPolyline>> GetPolylines(string rt, string api_key) {
             PatternResponse patternResponse = await PAT_API.GetPatterns(rt, api_key);
             return patternResponse.patterns.Select(pat =>

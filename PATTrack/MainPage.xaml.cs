@@ -1,29 +1,28 @@
 ﻿namespace PATTrack
 {
+    using PATTrack.PATAPI;
+    using PATTrack.PATAPI.POCO;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Concurrency;
     using System.Reactive.Linq;
+    using System.Threading.Tasks;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Resources;
+    using Windows.Devices.Geolocation;
     using Windows.Foundation.Diagnostics;
     using Windows.Phone.UI.Input;
     using Windows.Storage;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
-    using Windows.UI.Xaml.Input;
-    using PATTrack.Extensions;
-    using PATTrack.PATAPI;
-    using PATTrack.PATAPI.POCO;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
     using Windows.UI.Xaml.Controls.Maps;
-    using Windows.Devices.Geolocation;
+    using Windows.UI.Xaml.Input;
     public sealed partial class MainPage : Page
     {
 
         private static IDisposable vehicleSubscription;
-        private static Dictionary<string,List<MapPolyline>> polylineDict = new Dictionary<string, List<MapPolyline>>();
+        BusMap busmap = new BusMap(); 
         private static readonly LoggingChannel log = LoggingSingleton.Instance.channel;
         private static readonly LoggingSession logSession = LoggingSingleton.Instance.session;
 
@@ -55,11 +54,12 @@
             log.LogMessage("Suspending");
             await logSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logFile.etl");
             vehicleSubscription.Dispose();
-            map.MapElements.Clear();
+            busmap.ClearMap();
         }
 
         private void Setup()
         {
+            busmap.map = map;
             var loader = new ResourceLoader();
             var api_key = loader.GetString("PAT_KEY");
 
@@ -72,10 +72,10 @@
                                               selected = listview.SelectedItems
                                                          .Select(i => (i as ListViewItem).Content.ToString())
                                                          .ToArray(),
-                                              clicked = args.AddedItems.Select(x => new {rt = (x as ListViewItem).Content.ToString(),
+                                              clicked = args.AddedItems.Select(x => new vehicleselected() {rt = (x as ListViewItem).Content.ToString(),
                                                                                          selected = (x as ListViewItem).IsSelected})
                                                                        .Concat(from x in args.RemovedItems
-                                                                               select new {rt = (x as ListViewItem).Content.ToString(),
+                                                                               select new vehicleselected() {rt = (x as ListViewItem).Content.ToString(),
                                                                                            selected = (x as ListViewItem).IsSelected} )
                                                                        .Single()
                                           };
@@ -95,27 +95,10 @@
                 .Subscribe(
                 onNext: async x =>
                 {
-                    if (!polylineDict.ContainsKey(x.rt))
-                    {
-                        polylineDict[x.rt] = await PAT_API.GetPolylines(x.rt,api_key);
-                    }
-                    foreach (var line in polylineDict[x.rt])
-                    {
-                        if (x.selected)
-                        {
-                            line.Visible = true;
-                            map.MapElements.Add(line);
-                        }
-                        else
-                        {
-                            line.Visible = false;
-                            map.MapElements.Remove(line);
-                        }
-                    }
+                    await busmap.AddPolylines(x, api_key);
                 }
                 , onError: ex =>
                 {
-
                 }
                 , onCompleted: () =>
                 {
@@ -134,11 +117,7 @@
                                        onNext: async x =>
                                        {
                                            var xs = await x;
-                                           foreach (var icon in map.MapElements.OfType<MapIcon>().ToList())
-                                           {
-                                               map.MapElements.Remove(icon);
-                                           }
-                                           map.AddBusIcons(xs);
+                                           busmap.UpdateBuses(xs);
                                        }
                                        , onError: ex => 
                                        {
