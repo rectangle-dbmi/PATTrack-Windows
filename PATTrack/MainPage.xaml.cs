@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Reactive.Concurrency;
     using System.Reactive.Linq;
+    using PATTrack.Map;
     using PATTrack.PATAPI;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Resources;
@@ -103,7 +104,9 @@
 
             var mapChanges = from item in listState
                              select item.clicked;
-            var mapSubscription = mapChanges.SubscribeOn(NewThreadScheduler.Default)
+
+            var mapSubscription = mapChanges
+                .SubscribeOn(NewThreadScheduler.Default)
                 .ObserveOnDispatcher()
                 .Subscribe(
                 onNext: async x =>

@@ -97,7 +97,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="BusMap.cs" />
+    <Compile Include="Map\BusMap.cs" />
+    <Compile Include="Map\MapStop.cs" />
+    <Compile Include="Map\Route.cs" />
     <Compile Include="PATAPI\PATAPI.cs" />
     <Compile Include="LoggingSingleton.cs" />
     <Compile Include="MainPage.xaml.cs">
