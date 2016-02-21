@@ -95,6 +95,7 @@
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="BusMap.cs" />
     <Compile Include="PATAPI\PATAPI.cs" />
@@ -102,7 +103,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PATAPI\POCO\BustimeVehicleResponse.cs" />
+    <Compile Include="PATAPI\POCO\VehicleResponse.cs" />
     <Compile Include="PATAPI\POCO\PatternResponse.cs" />
     <Compile Include="PATAPI\POCO\Response.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

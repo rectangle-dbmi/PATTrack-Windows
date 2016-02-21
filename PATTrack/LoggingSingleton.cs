@@ -4,17 +4,19 @@
 
     internal sealed class LoggingSingleton
     {
-        private static readonly LoggingSingleton instance = new LoggingSingleton();
-        public LoggingSession session { get; private set; }
-        public LoggingChannel channel { get; private set; }
+        private static readonly LoggingSingleton Inst = new LoggingSingleton();
 
         private LoggingSingleton()
         {
-            session = new LoggingSession("SessionName");
-            channel = new LoggingChannel("ChannelName", null);
-            session.AddLoggingChannel(channel);
+            this.Session = new LoggingSession("SessionName");
+            this.Channel = new LoggingChannel("ChannelName", null);
+            this.Session.AddLoggingChannel(this.Channel);
         }
 
-        internal static LoggingSingleton Instance => instance;
+        public LoggingSession Session { get; private set; }
+
+        public LoggingChannel Channel { get; private set; }
+
+        internal static LoggingSingleton Instance => Inst;
     }
 }

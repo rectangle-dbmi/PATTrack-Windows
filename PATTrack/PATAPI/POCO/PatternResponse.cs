@@ -5,11 +5,14 @@
     using System.Linq;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
-    public class PatternResponse : Response
+
+    public class PatternResponse : IResponse
     {
-        public List<Pattern> patterns { get; set; }
+        public List<Pattern> Patterns { get; set; }
 
         public Exception ResponseError { get; set; }
+
+        public bool IsError { get; set; } = false;
 
         public static PatternResponse ParseResponse(XDocument doc)
         {
@@ -17,49 +20,56 @@
             {
                 return new PatternResponse()
                 {
-                    patterns = (from ptr in doc.Descendants("ptr")
+                    Patterns = (from ptr in doc.Descendants("ptr")
                                 select new Pattern()
                                 {
-                                    pid = ptr.Element("pid")?.Value,
-                                    pts = from pt in ptr?.Descendants("pt")
+                                    Pid = ptr.Element("pid")?.Value,
+                                    Pts = from pt in ptr?.Descendants("pt")
                                           select new Pt()
                                           {
-                                              seq = int.Parse(pt.Element("seq")?.Value),
-                                              lat = double.Parse(pt.Element("lat")?.Value),
-                                              lon = double.Parse(pt.Element("lon")?.Value),
-                                              typ = pt.Element("typ")?.Value,
-                                              stpid = pt.Element("stpid")?.Value,
-                                              stpnm = pt.Element("stpnm")?.Value,
-                                              pdist = pt.Element("pdist")?.Value
+                                              Seq = int.Parse(pt.Element("seq")?.Value),
+                                              Lat = double.Parse(pt.Element("lat")?.Value),
+                                              Lon = double.Parse(pt.Element("lon")?.Value),
+                                              Typ = pt.Element("typ")?.Value,
+                                              Stpid = pt.Element("stpid")?.Value,
+                                              Stpnm = pt.Element("stpnm")?.Value,
+                                              Pdist = pt.Element("pdist")?.Value
                                           }
                                 }).ToList()
                 };
             }
             catch (Exception ex)
             {
-                LoggingSingleton.Instance.channel.LogMessage("Exception in Response.ParseResponse", LoggingLevel.Error);
-                LoggingSingleton.Instance.channel.LogMessage(ex.StackTrace, LoggingLevel.Verbose);
-                LoggingSingleton.Instance.channel.LogMessage(doc.ToString(), LoggingLevel.Verbose);
+                LoggingSingleton.Instance.Channel.LogMessage("Exception in Response.ParseResponse", LoggingLevel.Error);
+                LoggingSingleton.Instance.Channel.LogMessage(ex.StackTrace, LoggingLevel.Verbose);
+                LoggingSingleton.Instance.Channel.LogMessage(doc.ToString(), LoggingLevel.Verbose);
                 ex.Data["XmlResponse"] = doc.ToString();
-                return new PatternResponse() { ResponseError = ex };
+                return new PatternResponse() { ResponseError = ex, IsError = true };
             }
         }
-    }
 
-    public class Pattern
-    {
-        public string pid { get; set; }
-        public IEnumerable<Pt> pts { get; set; }
-    }
+        public class Pattern
+        {
+            public string Pid { get; set; }
 
-    public class Pt
-    {
-          public int seq{ get; set; }
-          public double lat{ get; set; }
-          public double lon{ get; set; }
-          public string typ{ get; set; }
-          public string stpid{ get; set; }
-          public string stpnm{ get; set; }
-          public string pdist{ get; set; }
+            public IEnumerable<Pt> Pts { get; set; }
+        }
+
+        public class Pt
+        {
+            public int Seq { get; set; }
+
+            public double Lat { get; set; }
+
+            public double Lon { get; set; }
+
+            public string Typ { get; set; }
+
+            public string Stpid { get; set; }
+
+            public string Stpnm { get; set; }
+
+            public string Pdist { get; set; }
+        }
     }
 }
