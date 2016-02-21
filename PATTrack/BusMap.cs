@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using PATTrack.PATAPI;
     using PATTrack.PATAPI.POCO;
@@ -20,9 +21,9 @@
     {
         internal MapControl Map { get; set; } = null;
 
-        internal Dictionary<string, List<MapPolyline>> Polylines { get; set; } = new Dictionary<string, List<MapPolyline>>();
+        private Dictionary<string, List<MapPolyline>> Polylines { get; set; } = new Dictionary<string, List<MapPolyline>>() { };
 
-        internal Dictionary<string, MapIcon> BusIcons { get; set; } = new Dictionary<string, MapIcon>();
+        private Dictionary<string, MapIcon> BusIcons { get; set; } = new Dictionary<string, MapIcon>() { };
 
         internal void ClearMap()
         {
@@ -39,11 +40,12 @@
             this.AddBusIcons(vehicles);
         }
 
-        internal async Task AddPolylines(VehicleSelected selection, string api_key)
+        internal async Task UpdatePolylines(VehicleSelected selection, string api_key)
         {
             if (!this.Polylines.ContainsKey(selection.Rt))
             {
-                this.Polylines[selection.Rt] = await PAT_API.GetPolylines(selection.Rt, api_key);
+                PatternResponse patternResponse = await PAT_API.GetPatterns(selection.Rt, api_key);
+                this.Polylines[selection.Rt] =  this.GetPolylines(selection.Rt, patternResponse);
             }
 
             foreach (var line in this.Polylines[selection.Rt])
@@ -60,6 +62,28 @@
                     this.Map.MapElements.Remove(line);
                 }
             }
+        }
+
+        private List<MapPolyline> GetPolylines(string rt, PatternResponse patternResponse)
+        {
+            if (patternResponse.ResponseError != null)
+            {
+                return new List<MapPolyline>() { };
+            }
+
+            return patternResponse.Patterns.Select(pat =>
+            {
+                var points = from pt in pat.Pts
+                             select new BasicGeoposition()
+                             {
+	                             Latitude = pt.Lat,
+	                             Longitude = pt.Lon
+	                         };
+                MapPolyline polyline = new MapPolyline();
+                polyline.Path = new Geopath(points.ToList());
+                polyline.Visible = true;
+                return polyline;
+            }).ToList();
         }
 
         private void AddBusIcons(VehicleResponse.Vehicle[] vehicles)

@@ -36,24 +36,15 @@
             return VehicleResponse.ParseResponse(XDocument.Load(responseStream));
         }
 
-        public static async Task<List<MapPolyline>> GetPolylines(string rt, string api_key)
+        internal static async Task<PatternResponse> GetPatterns(string route, string api_key)
         {
-            PatternResponse patternResponse = await PAT_API.GetPatterns(rt, api_key);
-
-            if (patternResponse.ResponseError != null)
-            {
-                return new List<MapPolyline>() { };
-            }
-
-            return patternResponse.Patterns.Select(pat =>
-            {
-                var points = (from pt in pat.Pts
-                             select new BasicGeoposition() { Latitude = pt.Lat, Longitude = pt.Lon }).ToList();
-                MapPolyline polyline = new MapPolyline();
-                polyline.Path = new Geopath(points);
-                polyline.Visible = true;
-                return polyline;
-            }).ToList();
+            string requestUrl = string.Format(
+                "{0}getpatterns?key={1}&rt={2}&format=xml",
+                BaseUrl,
+                api_key,
+                route);
+            var responseStream = await PAT_API.MakeRequest(requestUrl);
+            return PatternResponse.ParseResponse(XDocument.Load(responseStream));
         }
 
         private static async Task<Stream> MakeRequest(string requestUrl)
@@ -72,17 +63,6 @@
                 LoggingSingleton.Instance.Channel.LogMessage(e.Message, LoggingLevel.Critical);
                 return null;
             }
-        }
-
-        private static async Task<PatternResponse> GetPatterns(string route, string api_key)
-        {
-            string requestUrl = string.Format(
-                "{0}getpatterns?key={1}&rt={2}&format=xml",
-                BaseUrl,
-                api_key,
-                route);
-            var responseStream = await PAT_API.MakeRequest(requestUrl);
-            return PatternResponse.ParseResponse(XDocument.Load(responseStream));
         }
     }
 }

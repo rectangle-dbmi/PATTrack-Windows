@@ -108,7 +108,7 @@
                 .Subscribe(
                 onNext: async x =>
                 {
-                    await busmap.AddPolylines(x, api_key);
+                    await busmap.UpdatePolylines(x, api_key);
                 }
 
                 , onError: ex =>
