@@ -9,7 +9,7 @@
     using Windows.Devices.Geolocation;
     using Windows.Foundation;
     using Windows.UI.Xaml.Controls.Maps;
-
+    using Windows.Storage.Streams;
     public struct VehicleSelected
     {
         public string Rt { get; set; }
@@ -100,9 +100,10 @@
         private void AddStopToMap(PatternResponse.Stop stop)
         {
             var icon = new MapIcon();
+            icon.Image = RandomAccessStreamReference.CreateFromUri(new Uri("ms-appx:///Assets/bus_stop.png"));
             icon.Location = new Geopoint(new BasicGeoposition() { Latitude = stop.Lat, Longitude = stop.Lon });
-            icon.NormalizedAnchorPoint = new Point(0.5, 1.0);
-            icon.Title = stop.Stpid;
+            icon.NormalizedAnchorPoint = new Point(0.5, 0.5);
+            icon.ZIndex = 10;
             this.Map.MapElements.Add(icon);
             this.busStops.Add(
                 stop.Stpid
