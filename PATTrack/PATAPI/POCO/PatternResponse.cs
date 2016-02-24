@@ -5,7 +5,6 @@
     using System.Linq;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
-    using Windows.UI.Xaml.Controls.Maps;
 
     public class PatternResponse : IResponse
     {

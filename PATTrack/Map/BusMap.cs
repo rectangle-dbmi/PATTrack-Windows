@@ -8,8 +8,10 @@
     using PATTrack.PATAPI.POCO;
     using Windows.Devices.Geolocation;
     using Windows.Foundation;
-    using Windows.UI.Xaml.Controls.Maps;
     using Windows.Storage.Streams;
+    using Windows.UI.Xaml.Controls.Maps;
+    using Stop = PATTrack.PATAPI.POCO.PatternResponse.Stop;
+
     public struct VehicleSelected
     {
         public string Rt { get; set; }
@@ -29,6 +31,9 @@
 
         internal void ClearMap()
         {
+            routes.Clear();
+            busIcons.Clear();
+            busStops.Clear();
             this.Map.MapElements.Clear();
         }
 
@@ -44,6 +49,7 @@
 
         internal async Task UpdatePolylines(VehicleSelected selection, string api_key)
         {
+            Route route;
             if (!this.routes.ContainsKey(selection.Rt))
             {
                 if (selection.Selected == false)
@@ -52,18 +58,6 @@
                 }
 
                 PatternResponse patternResponse = await PAT_API.GetPatterns(selection.Rt, api_key);
-                var stops = new List<PatternResponse.Stop>() { };
-                foreach (var stop in from pattern in patternResponse.Patterns
-                                     from stop in pattern.Stops
-                                     select stop)
-                {
-                    stops.Add(stop);
-                    if (!this.busStops.ContainsKey(stop.Stpid))
-                    {
-                        this.AddStopToMap(stop);
-                    }
-                }
-
                 this.routes[selection.Rt] = new Route()
                 {
                     Polylines = this.GetPolylines(selection.Rt, patternResponse),
@@ -72,51 +66,70 @@
                             select stop).Distinct().ToList()
                 };
             }
+            route = this.routes[selection.Rt];
 
+            foreach (var stop in route.Stops)
+            {
+                MapStop mapStop;
+                if (!this.busStops.ContainsKey(stop.Stpid))
+                {
+                    mapStop = this.AddStopToMap(stop);
+                }
+                else
+                {
+                    mapStop = this.busStops[stop.Stpid];
+                }
+
+                if (selection.Selected)
+                {
+                    mapStop.IncrementRouteCount();
+                }
+                else
+                {
+                    mapStop.DecrementRouteCount();
+                }
+            }
+            this.ToggleRouteSelection(selection, route);
+        }
+
+        private void ToggleRouteSelection(VehicleSelected selection, Route route)
+        {
             if (selection.Selected)
             {
-                foreach (var line in this.routes[selection.Rt].Polylines)
+                foreach (var line in route.Polylines)
                 {
                     line.Visible = true;
                     line.StrokeThickness = 3;
                     this.Map.MapElements.Add(line);
                 }
-
-                foreach (var stop in this.routes[selection.Rt].Stops)
-                {
-                    this.busStops[stop.Stpid]?.IncrementRouteCount();
-                }
             }
             else
             {
-                    foreach (var line in this.routes[selection.Rt].Polylines)
-                    {
-                        line.Visible = false;
-                        this.Map.MapElements.Remove(line);
-                    }
-
-                    foreach (var stop in this.routes[selection.Rt].Stops)
-                    {
-                        this.busStops[stop.Stpid]?.DecrementRouteCount();
-                    }
+                foreach (var line in route.Polylines)
+                {
+                    line.Visible = false;
+                    this.Map.MapElements.Remove(line);
+                }
             }
         }
 
-        private void AddStopToMap(PatternResponse.Stop stop)
+        private MapStop AddStopToMap(Stop stop)
         {
             var icon = new MapIcon();
             icon.Image = RandomAccessStreamReference.CreateFromUri(new Uri("ms-appx:///Assets/bus_stop.png"));
             icon.Location = new Geopoint(new BasicGeoposition() { Latitude = stop.Lat, Longitude = stop.Lon });
             icon.NormalizedAnchorPoint = new Point(0.5, 0.5);
+            icon.MapTabIndex = int.Parse(stop.Stpid);
+            icon.Title = stop.Stpid;
             icon.ZIndex = 10;
             this.Map.MapElements.Add(icon);
-            this.busStops.Add(
-                stop.Stpid
-                , new MapStop()
-                {
-                    Stop = stop,
-                    Icon = icon
-                });
+            var mapStop = new MapStop()
+            {
+                Stop = stop,
+                Icon = icon
+            };
+            this.busStops.Add(stop.Stpid, mapStop);
+            return mapStop;
         }
 
         private List<MapPolyline> GetPolylines(string rt, PatternResponse patternResponse)
