@@ -46,6 +46,11 @@
         {
             if (!this.routes.ContainsKey(selection.Rt))
             {
+                if (selection.Selected == false)
+                {
+                    return;
+                }
+
                 PatternResponse patternResponse = await PAT_API.GetPatterns(selection.Rt, api_key);
                 var stops = new List<PatternResponse.Stop>() { };
                 foreach (var stop in from pattern in patternResponse.Patterns

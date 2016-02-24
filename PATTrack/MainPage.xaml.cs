@@ -13,12 +13,13 @@
     using Windows.Storage;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
-
+    using System.Collections.Generic;
     public sealed partial class MainPage : Page
     {
         private static readonly LoggingChannel Log = LoggingSingleton.Instance.Channel;
         private static readonly LoggingSession LogSession = LoggingSingleton.Instance.Session;
         private static IDisposable vehicleSubscription;
+        private static IDisposable mapSubscription;
         private BusMap busmap = new BusMap(); 
 
         public MainPage()
@@ -58,9 +59,11 @@
         private async void OnAppSuspending(object sender, SuspendingEventArgs e)
         {
             Log.LogMessage("Suspending");
-            await LogSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logFile.etl");
             vehicleSubscription.Dispose();
-            this.busmap.ClearMap();
+            mapSubscription.Dispose();
+            var deferral = e.SuspendingOperation.GetDeferral();
+            await LogSession.SaveToFileAsync(ApplicationData.Current.LocalFolder, "logFile.etl");
+            deferral.Complete();
         }
 
         private void Setup()
@@ -105,7 +108,7 @@
             var mapChanges = from item in listState
                              select item.clicked;
 
-            var mapSubscription = mapChanges
+            mapSubscription = mapChanges
                 .SubscribeOn(NewThreadScheduler.Default)
                 .ObserveOnDispatcher()
                 .Subscribe(
