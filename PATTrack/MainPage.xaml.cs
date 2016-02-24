@@ -101,7 +101,7 @@
                                           , minutes: 0
                                           , seconds: 0
                                           , milliseconds: 300))
-                                      .Where(x => x.selected.Length < 10)
+                                      .Where(x => x.selected.Length < 11)
                                       .Publish()
                                       .RefCount();
 
