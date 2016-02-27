@@ -82,11 +82,11 @@
 
                 if (selection.Selected)
                 {
-                    mapStop.IncrementRouteCount();
+                    mapStop.AddRoute(selection.Rt);
                 }
                 else
                 {
-                    mapStop.DecrementRouteCount();
+                    mapStop.RemoveRoute(selection.Rt);
                 }
             }
             this.ToggleRouteSelection(selection, route);
@@ -99,7 +99,6 @@
                 foreach (var line in route.Polylines)
                 {
                     line.Visible = true;
-                    line.StrokeThickness = 3;
                     this.Map.MapElements.Add(line);
                 }
             }
@@ -150,6 +149,7 @@
                 MapPolyline polyline = new MapPolyline();
                 polyline.Path = new Geopath(points.ToList());
                 polyline.Visible = true;
+                polyline.StrokeThickness = 3;
                 return polyline;
             }).ToList();
         }

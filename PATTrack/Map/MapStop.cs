@@ -1,6 +1,7 @@
 ﻿namespace PATTrack.Map
 {
     using PATAPI.POCO;
+    using System.Collections.Generic;
     using Windows.UI.Xaml.Controls.Maps;
 
     internal class MapStop
@@ -9,21 +10,18 @@
 
         internal PatternResponse.Stop Stop { get; set; }
 
-        private int RouteCount { get; set; } = 0;
+        private HashSet<string> Routes { get; set; } = new HashSet<string>() { };
 
-        internal void IncrementRouteCount()
+        internal void AddRoute(string rt)
         {
-            this.RouteCount += 1;
+            Routes.Add(rt);
             this.Icon.Visible = true;
         }
 
-        internal void DecrementRouteCount()
+        internal void RemoveRoute(string rt)
         {
-            this.RouteCount -= 1;
-            if (this.RouteCount == 0)
-            {
-                this.Icon.Visible = false;
-            }
+            Routes.Remove(rt);
+            this.Icon.Visible = this.Routes.Count != 0;
         }
     }
 }
