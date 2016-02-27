@@ -101,7 +101,7 @@
                                           , minutes: 0
                                           , seconds: 0
                                           , milliseconds: 300))
-                                      .Where(x => x.selected.Length < 11)
+                                      .Where(x => x.selected.Length < 10 || (x.selected.Length == 10 && x.clicked.Selected == true))
                                       .Publish()
                                       .RefCount();
 
@@ -150,6 +150,11 @@
                                        {
                                            Log.LogMessage("Vehicle observable completed");
                                        });
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.View.IsPaneOpen = !this.View.IsPaneOpen;
         }
     }
 }
