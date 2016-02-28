@@ -14,6 +14,7 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using System.Collections.Generic;
+    using Windows.Devices.Geolocation;
     public sealed partial class MainPage : Page
     {
         private static readonly LoggingChannel Log = LoggingSingleton.Instance.Channel;
@@ -66,9 +67,15 @@
             deferral.Complete();
         }
 
-        private void Setup()
+        private async void Setup()
         {
             this.busmap.Map = map;
+            var pitt = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = 40.4397, Longitude = -79.9764
+            });
+            await map.TrySetViewAsync(pitt, 12);
+
             var loader = new ResourceLoader();
             var api_key = loader.GetString("PAT_KEY");
 
@@ -155,6 +162,11 @@
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.View.IsPaneOpen = !this.View.IsPaneOpen;
+        }
+
+        private void map_ZoomLevelChanged(Windows.UI.Xaml.Controls.Maps.MapControl sender, object args)
+        {
+
         }
     }
 }

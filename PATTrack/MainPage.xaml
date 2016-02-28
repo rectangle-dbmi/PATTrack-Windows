@@ -7,8 +7,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
     mc:Ignorable="d">
-    <StackPanel>
+    <RelativePanel>
         <StackPanel
+            Name="Bar"
+            RelativePanel.AlignLeftWithPanel="True"
             Orientation="Horizontal">
             <Button
                 Name="Button"
@@ -21,18 +23,20 @@
                 Margin="10,0,0,0">PATTrack</TextBlock>
         </StackPanel>
         <SplitView Name="View"
+            RelativePanel.Below="Bar"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.AlignBottomWithPanel="True"
             IsPaneOpen="True"
-            DisplayMode="CompactOverlay"
+            DisplayMode="Overlay"
             PanePlacement="Left"
-            CompactPaneLength="10"
             OpenPaneLength="100">
             <SplitView.Pane>
                 <ListView
                     SelectionMode="Multiple"
                     IsMultiSelectCheckBoxEnabled="False"
-                    MinWidth="100"
-                    MaxWidth="100"
                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                    ScrollViewer.IsScrollInertiaEnabled="True"
                     ScrollViewer.VerticalScrollMode="Enabled"
                     x:Name="listview">
                     <ListViewItem>61A</ListViewItem>
@@ -44,18 +48,16 @@
                     <ListViewItem>71B</ListViewItem>
                     <ListViewItem>71C</ListViewItem>
                     <ListViewItem>71D</ListViewItem>
-                    <ListViewItem>28X</ListViewItem>
-                    <ListViewItem>58</ListViewItem>
-                    <ListViewItem>54</ListViewItem>
                 </ListView>
             </SplitView.Pane>
             <SplitView.Content>
                 <Maps:MapControl
                     x:Uid="mc"
                     x:Name="map"
+                    Height="Auto"
                     Margin="0,0,0,0"
-                    MinWidth="500"/>
+                    ZoomLevelChanged="map_ZoomLevelChanged"/>
             </SplitView.Content>
         </SplitView>
-    </StackPanel>
+    </RelativePanel>
 </Page>
