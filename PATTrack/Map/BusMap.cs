@@ -50,7 +50,16 @@
         internal async Task UpdatePolylines(VehicleSelected selection, string api_key)
         {
             Route route;
-            if (!this.routes.ContainsKey(selection.Rt))
+            var previouslySelected = this.routes.TryGetValue(selection.Rt, out route);
+
+            //prevent attempting to select an already selected route
+            if (selection.Selected && (route?.IsSelected ?? false))
+            {
+                return;
+            }
+
+            //if this is new, get the polylines 
+            if (!previouslySelected)
             {
                 if (selection.Selected == false)
                 {
@@ -89,10 +98,12 @@
                     mapStop.RemoveRoute(selection.Rt);
                 }
             }
-            this.ToggleRouteSelection(selection, route);
+
+            this.TogglePolylines(selection, route);
+            route.IsSelected = selection.Selected;
         }
 
-        private void ToggleRouteSelection(VehicleSelected selection, Route route)
+        private void TogglePolylines(VehicleSelected selection, Route route)
         {
             if (selection.Selected)
             {

@@ -9,5 +9,7 @@
         public List<MapPolyline> Polylines { get; set; } = new List<MapPolyline>() { };
 
         public List<Stop> Stops { get; set; } = new List<Stop>() { };
+
+        public bool IsSelected { get; set; } = false;
     }
 }
