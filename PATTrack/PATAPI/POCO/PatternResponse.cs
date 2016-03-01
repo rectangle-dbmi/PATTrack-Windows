@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
 
@@ -14,13 +15,16 @@
 
         public bool IsError { get; set; } = false;
 
-        public static PatternResponse ParseResponse(XDocument doc)
+        public async static Task<PatternResponse> ParseResponse(string requestUrl)
         {
+            XDocument xdoc = null;
             try
             {
+                var responseStream = await PAT_API.MakeRequest(requestUrl);
+                xdoc = XDocument.Load(responseStream);
                 return new PatternResponse()
                 {
-                    Patterns = (from ptr in doc.Descendants("ptr")
+                    Patterns = (from ptr in xdoc.Descendants("ptr")
                                 let pid = ptr.Element("pid")?.Value
                                 let rtdir = ptr.Element("rtdir")?.Value
                                 let pts = from pt in ptr?.Descendants("pt")
@@ -57,8 +61,12 @@
             {
                 LoggingSingleton.Instance.Channel.LogMessage("Exception in Response.ParseResponse", LoggingLevel.Error);
                 LoggingSingleton.Instance.Channel.LogMessage(ex.StackTrace, LoggingLevel.Verbose);
-                LoggingSingleton.Instance.Channel.LogMessage(doc.ToString(), LoggingLevel.Verbose);
-                ex.Data["XmlResponse"] = doc.ToString();
+                if (xdoc != null)
+                {
+                    LoggingSingleton.Instance.Channel.LogMessage(xdoc.ToString(), LoggingLevel.Verbose);
+                    ex.Data["XmlResponse"] = xdoc.ToString();
+                }
+
                 return new PatternResponse() { ResponseError = ex, IsError = true };
             }
         }

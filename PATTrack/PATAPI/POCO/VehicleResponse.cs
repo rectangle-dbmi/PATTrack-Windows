@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Xml.Linq;
     using Windows.Foundation.Diagnostics;
 
@@ -15,13 +16,16 @@
 
         public bool IsError { get; set; } = false;
 
-        public static VehicleResponse ParseResponse(XDocument doc)
+        public async static Task<VehicleResponse> ParseResponse(string requestUrl)
         {
+            XDocument xdoc = null;
             try
             {
+                var responseStream = await PAT_API.MakeRequest(requestUrl);
+                xdoc = XDocument.Load(responseStream);
                 return new VehicleResponse()
                 {
-                    Vehicles = (from d in doc.Descendants("vehicle")
+                    Vehicles = (from d in xdoc.Descendants("vehicle")
                                select new Vehicle
                                {
                                    Lat = double.Parse(d.Element("lat")?.Value),
@@ -30,7 +34,7 @@
                                    Pid = int.Parse(d.Element("pid")?.Value),
                                    Vid = d.Element("vid")?.Value
                                }).ToArray(),
-                    Errors = (from d in doc.Descendants("error")
+                    Errors = (from d in xdoc.Descendants("error")
                              select new Error
                              {
                                  Rt = d.Element("rt")?.Value,
@@ -43,8 +47,12 @@
             {
                 LoggingSingleton.Instance.Channel.LogMessage("Exception in Response.ParseResponse", LoggingLevel.Error);
                 LoggingSingleton.Instance.Channel.LogMessage(ex.StackTrace, LoggingLevel.Verbose);
-                LoggingSingleton.Instance.Channel.LogMessage(doc.ToString(), LoggingLevel.Verbose);
-                ex.Data["XmlResponse"] = doc.ToString();
+                if (xdoc != null)
+                {
+                    LoggingSingleton.Instance.Channel.LogMessage(xdoc.ToString(), LoggingLevel.Verbose);
+                    ex.Data["XmlResponse"] = xdoc.ToString();
+
+                }
                 return new VehicleResponse() { ResponseError = ex, IsError = true };
             }
         }

@@ -13,7 +13,7 @@
     using Windows.Foundation.Diagnostics;
     using Windows.UI.Xaml.Controls.Maps;
 
-    public class PAT_API
+    internal class PAT_API
     {
         private const string BaseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
 
@@ -23,6 +23,7 @@
             {
                 return new VehicleResponse()
                 {
+                    IsError = true,
                     ResponseError = new Exception("Routes array must contain between 1 and 10 elements")
                 };
             }
@@ -32,22 +33,20 @@
                 BaseUrl,
                 api_key,
                 routes.Aggregate((a, b) => a + "," + b));
-            var responseStream = await PAT_API.MakeRequest(requestUrl);
-            return VehicleResponse.ParseResponse(XDocument.Load(responseStream));
+                return await VehicleResponse.ParseResponse(requestUrl);
         }
 
         internal static async Task<PatternResponse> GetPatterns(string route, string api_key)
         {
             string requestUrl = string.Format(
-                "{0}getpatterns?key={1}&rt={2}&format=xml",
-                BaseUrl,
-                api_key,
-                route);
-            var responseStream = await PAT_API.MakeRequest(requestUrl);
-            return PatternResponse.ParseResponse(XDocument.Load(responseStream));
+            "{0}getpatterns?key={1}&rt={2}&format=xml",
+            BaseUrl,
+            api_key,
+            route);
+            return await PatternResponse.ParseResponse(requestUrl);
         }
 
-        private static async Task<Stream> MakeRequest(string requestUrl)
+        internal static async Task<Stream> MakeRequest(string requestUrl)
         {
             try
             {
@@ -61,7 +60,7 @@
             catch (Exception e)
             {
                 LoggingSingleton.Instance.Channel.LogMessage(e.Message, LoggingLevel.Critical);
-                return null;
+                throw e;
             }
         }
     }
