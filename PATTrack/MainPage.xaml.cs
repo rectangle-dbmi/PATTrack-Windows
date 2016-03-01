@@ -48,7 +48,10 @@
 
         private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (this.Frame.CanGoBack)
+            {
+                this.Frame.GoBack();
+            }
         }
 
         private void OnAppResuming(object sender, object e)
@@ -138,14 +141,14 @@
                                     .Publish()
                                     .RefCount();
 
-            vehicleSubscription = vehicles.Select(async xs => (await PAT_API.GetBustimeResponse(xs.selected, api_key)).Vehicles)
+            vehicleSubscription = vehicles.Select(async xs => (await PAT_API.GetBustimeResponse(xs.selected, api_key)))
                                    .SubscribeOn(NewThreadScheduler.Default)
                                    .ObserveOnDispatcher()
                                    .Subscribe(
                                        onNext: async x =>
                                        {
                                            var xs = await x;
-                                           busmap.UpdateBuses(xs);
+                                           busmap.UpdateBuses(xs.Vehicles);
                                        }
 
                                        , onError: ex => 

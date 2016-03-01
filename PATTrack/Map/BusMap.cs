@@ -58,7 +58,7 @@
                 return;
             }
 
-            //if this is new, get the polylines 
+            //if this is new, get the polylines and initialize route
             if (!previouslySelected)
             {
                 if (selection.Selected == false)
@@ -67,6 +67,13 @@
                 }
 
                 PatternResponse patternResponse = await PAT_API.GetPatterns(selection.Rt, api_key);
+
+                // this is useless, fix it
+                if (patternResponse.IsError)
+                {
+                    return;
+                }
+
                 this.routes[selection.Rt] = new Route()
                 {
                     Polylines = this.GetPolylines(selection.Rt, patternResponse),
@@ -75,8 +82,9 @@
                             select stop).Distinct().ToList()
                 };
             }
-            route = this.routes[selection.Rt];
 
+            route = this.routes[selection.Rt];
+            this.TogglePolylines(selection, route);
             foreach (var stop in route.Stops)
             {
                 MapStop mapStop;
@@ -99,7 +107,6 @@
                 }
             }
 
-            this.TogglePolylines(selection, route);
             route.IsSelected = selection.Selected;
         }
 

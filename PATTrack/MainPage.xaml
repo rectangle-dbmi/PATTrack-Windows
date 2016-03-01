@@ -7,23 +7,34 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
     mc:Ignorable="d">
-    <RelativePanel>
-        <StackPanel
-            Name="Bar"
+    <RelativePanel
+        Background="Black">
+        <Button
+            Name="Button"
             RelativePanel.AlignLeftWithPanel="True"
-            Orientation="Horizontal">
-            <Button
-                Name="Button"
-                Width="100"
-                FontSize="10"
-                Click="Button_Click">
-                Select Transit
-            </Button>
-            <TextBlock
-                Margin="10,0,0,0">PATTrack</TextBlock>
-        </StackPanel>
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="Black"
+            Foreground="White"
+            Height="30"
+            FontSize="12"
+            Click="Button_Click">
+            Select Transit
+        </Button>
+        <TextBlock
+            RelativePanel.RightOf="Button"
+            RelativePanel.AlignBottomWith="Button"
+            Height="27"
+            Padding="3"
+            FontStyle="Normal"
+            FontSize="12"
+            TextAlignment="Center"
+            Foreground="White"
+            Margin="10,0,0,0">
+            PATTrack
+        </TextBlock>
         <SplitView Name="View"
-            RelativePanel.Below="Bar"
+            RelativePanel.Below="Button"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignBottomWithPanel="True"
