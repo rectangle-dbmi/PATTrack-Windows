@@ -1,48 +1,48 @@
 ﻿namespace PATTrack
 {
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reactive.Concurrency;
     using System.Reactive.Linq;
-    using PATTrack.Map;
-    using PATTrack.PATAPI;
+    using Map;
+    using PATAPI;
     using Windows.ApplicationModel;
     using Windows.ApplicationModel.Resources;
+    using Windows.Devices.Geolocation;
     using Windows.Foundation.Diagnostics;
     using Windows.Phone.UI.Input;
     using Windows.Storage;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
-    using System.Collections.Generic;
-    using Windows.Devices.Geolocation;
+
     public sealed partial class MainPage : Page
     {
         private static readonly LoggingChannel Log = LoggingSingleton.Instance.Channel;
         private static readonly LoggingSession LogSession = LoggingSingleton.Instance.Session;
         private static IDisposable vehicleSubscription;
         private static IDisposable mapSubscription;
-        private BusMap busmap = new BusMap(); 
+        private readonly BusMap busmap = new BusMap(); 
 
         public MainPage()
         {
             this.InitializeComponent();
-            Application.Current.Suspending += new SuspendingEventHandler(OnAppSuspending);
-            Application.Current.Resuming += new EventHandler<object>(OnAppResuming);
+            Application.Current.Suspending += OnAppSuspending;
+            Application.Current.Resuming += OnAppResuming;
             if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.Phone.UI.Input.HardwareButtons"))
             {
                 HardwareButtons.BackPressed += HardwareButtons_BackPressed; 
             }
 
-            listview.SelectionChanged += Listview_SelectionChanged;
-
+            Listview.SelectionChanged += Listview_SelectionChanged;
             this.Setup();
         }
 
         private void Listview_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (listview.SelectedItems.Count > 10)
+            if (Listview.SelectedItems.Count > 10)
             {
-                listview.SelectedItems.RemoveAt(10);
+                Listview.SelectedItems.RemoveAt(10);
             }
         }
 
@@ -72,23 +72,23 @@
 
         private async void Setup()
         {
-            this.busmap.Map = map;
+            this.busmap.Map = Map;
             var pitt = new Geopoint(new BasicGeoposition()
             {
                 Latitude = 40.4397, Longitude = -79.9764
             });
-            await map.TrySetViewAsync(pitt, 12);
+            await Map.TrySetViewAsync(pitt, 12);
 
             var loader = new ResourceLoader();
-            var api_key = loader.GetString("PAT_KEY");
+            var apiKey = loader.GetString("PAT_KEY");
 
-            var listState = Observable.FromEventPattern(listview, "SelectionChanged")
+            var listState = Observable.FromEventPattern(Listview, "SelectionChanged")
                                       .Select(k =>
                                       {
-                                          var args = k.EventArgs as SelectionChangedEventArgs;
+                                          var args = (SelectionChangedEventArgs)k.EventArgs;
                                           return new
                                           {
-                                              selected = listview.SelectedItems
+                                              selected = Listview.SelectedItems
                                                          .Select(i => (i as ListViewItem).Content.ToString())
                                                          .ToArray(),
                                               clicked = args.AddedItems.Select(x => new VehicleSelected()
@@ -102,61 +102,71 @@
                                                                                    Rt = (x as ListViewItem).Content.ToString(),
                                                                                    Selected = (x as ListViewItem).IsSelected
                                                                                })
-                                                                       .Single()
                                           };
                                       })
-                                      .Throttle(new TimeSpan(
-                                          days: 0
-                                          , hours: 0
-                                          , minutes: 0
-                                          , seconds: 0
-                                          , milliseconds: 300))
-                                      .Where(x => x.selected.Length < 10 || (x.selected.Length == 10 && x.clicked.Selected == true))
+                                      .Where(x => x.selected.Length < 10 || (x.selected.Length == 10 && x.clicked.All(s => s.Selected)))
                                       .Publish()
                                       .RefCount();
 
+            var getPatterns = PatApi.GetPatternsMemo();
+
             var mapChanges = from item in listState
-                             select item.clicked;
+                             from clicked in item.clicked
+                             from patternResponse in Observable.FromAsync(
+                                 () => getPatterns(clicked.Rt, apiKey))
+                             select new
+                             {
+                                 Patterns = patternResponse,
+                                 Vh = clicked
+                             };
 
-            mapSubscription = mapChanges
-                .SubscribeOn(NewThreadScheduler.Default)
-                .ObserveOnDispatcher()
-                .Subscribe(
-                onNext: async x =>
-                {
-                    await busmap.UpdatePolylines(x, api_key);
-                }
+         mapSubscription = mapChanges
+             .SubscribeOn(NewThreadScheduler.Default)
+             .ObserveOnDispatcher()
+             .Subscribe(
+             onNext: x =>
+             {
+                 busmap.UpdatePolylines(x.Vh, x.Patterns, apiKey);
+                 Debug.WriteLine("updating polylines");
+             },
+             onError: ex =>
+             {
+             },
+             onCompleted: () =>
+             {
+             });
 
-                , onError: ex =>
-                {
-                }
+            var busListState = listState.Throttle(new TimeSpan(
+                days: 0,
+                hours: 0,
+                minutes: 0,
+                seconds: 0,
+                milliseconds: 300));
 
-                , onCompleted: () =>
-                {
-                });
+            var bustimeResponses = (from item in busListState
+                                    select from t in Observable.Timer(
+                                      TimeSpan.Zero,
+                                      TimeSpan.FromSeconds(10))
+                                           select item)
+                                           .Switch()
+                                           .Select(v => Observable.FromAsync(
+                                               () => PatApi.GetBustimeResponse(v.selected, apiKey)))
+                                           .Concat();
 
-            var vehicles = listState.Select(x => from t in Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(10))
-                                                 select x)
-                                    .Switch()
-                                    .Publish()
-                                    .RefCount();
-
-            vehicleSubscription = vehicles.Select(async xs => (await PAT_API.GetBustimeResponse(xs.selected, api_key)))
+            vehicleSubscription = bustimeResponses
                                    .SubscribeOn(NewThreadScheduler.Default)
                                    .ObserveOnDispatcher()
                                    .Subscribe(
-                                       onNext: async x =>
+                                       onNext: x =>
                                        {
-                                           var xs = await x;
-                                           busmap.UpdateBuses(xs.Vehicles);
-                                       }
-
-                                       , onError: ex => 
+                                           busmap.UpdateBuses(x.Vehicles);
+                                           Debug.WriteLine("updating buses");
+                                       },
+                                       onError: ex =>
                                        {
                                            Log.LogMessage(ex.Message);
-                                       } 
-
-                                       , onCompleted: () =>
+                                       },
+                                       onCompleted: () =>
                                        {
                                            Log.LogMessage("Vehicle observable completed");
                                        });
@@ -167,9 +177,13 @@
             this.View.IsPaneOpen = !this.View.IsPaneOpen;
         }
 
-        private void map_ZoomLevelChanged(Windows.UI.Xaml.Controls.Maps.MapControl sender, object args)
+        private void Clear_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Listview.SelectedItems.Clear();
+        }
+        
+        private void Map_ZoomLevelChanged(Windows.UI.Xaml.Controls.Maps.MapControl sender, object args)
+        {
         }
     }
 }

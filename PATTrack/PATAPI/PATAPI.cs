@@ -6,18 +6,29 @@
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
-    using System.Xml;
-    using System.Xml.Linq;
-    using PATTrack.PATAPI.POCO;
-    using Windows.Devices.Geolocation;
+    using POCO;
     using Windows.Foundation.Diagnostics;
-    using Windows.UI.Xaml.Controls.Maps;
 
-    internal class PAT_API
+    internal class PatApi
     {
         private const string BaseUrl = @"http://truetime.portauthority.org/bustime/api/v2/";
 
-        public static async Task<VehicleResponse> GetBustimeResponse(string[] routes, string api_key)
+        public static Func<string, string, Task<PatternResponse>> GetPatternsMemo()
+        {
+            Dictionary<string, PatternResponse> dict = new Dictionary<string, PatternResponse>();
+
+            return async (route, apiKey) =>
+            {
+                if (!dict.ContainsKey(route))
+                {
+                    dict[route] = await GetPatterns(route, apiKey);
+                }
+
+                return dict[route];
+            };
+        }
+
+        public static async Task<VehicleResponse> GetBustimeResponse(string[] routes, string apiKey)
         {
             if (routes.Length == 0 || routes.Length > 10)
             {
@@ -31,17 +42,17 @@
             string requestUrl = string.Format(
                 "{0}getvehicles?key={1}&rt={2}&format=xml",
                 BaseUrl,
-                api_key,
+                apiKey,
                 routes.Aggregate((a, b) => a + "," + b));
                 return await VehicleResponse.ParseResponse(requestUrl);
         }
 
-        internal static async Task<PatternResponse> GetPatterns(string route, string api_key)
+        internal static async Task<PatternResponse> GetPatterns(string route, string apiKey)
         {
             string requestUrl = string.Format(
             "{0}getpatterns?key={1}&rt={2}&format=xml",
             BaseUrl,
-            api_key,
+            apiKey,
             route);
             return await PatternResponse.ParseResponse(requestUrl);
         }
@@ -50,17 +61,15 @@
         {
             try
             {
-                HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
-                WebResponse response = await request.GetResponseAsync();
-                XmlDocument xmlDoc = new XmlDocument();
-                var f = LoggingSingleton.Instance;
+                var request = WebRequest.Create(requestUrl) as HttpWebRequest;
+                var response = await request.GetResponseAsync();
                 LoggingSingleton.Instance.Channel.LogMessage("request made", LoggingLevel.Critical);
                 return response.GetResponseStream();
             }
             catch (Exception e)
             {
                 LoggingSingleton.Instance.Channel.LogMessage(e.Message, LoggingLevel.Critical);
-                throw e;
+                throw;
             }
         }
     }

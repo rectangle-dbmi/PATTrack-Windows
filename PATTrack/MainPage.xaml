@@ -2,10 +2,9 @@
     x:Class="PATTrack.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:PATTrack"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    xmlns:maps="using:Windows.UI.Xaml.Controls.Maps"
     mc:Ignorable="d">
     <RelativePanel
         Background="Black">
@@ -33,6 +32,19 @@
             Margin="10,0,0,0">
             PATTrack
         </TextBlock>
+        <Button
+            Name="Clear"
+            RelativePanel.AlignBottomWith="Button"
+            RelativePanel.AlignRightWithPanel="True"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="Black"
+            Foreground="White"
+            Height="30"
+            FontSize="12"
+            Click="Clear_Click">
+            Clear Transit
+        </Button>
         <SplitView Name="View"
             RelativePanel.Below="Button"
             RelativePanel.AlignLeftWithPanel="True"
@@ -49,7 +61,7 @@
                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
                     ScrollViewer.IsScrollInertiaEnabled="True"
                     ScrollViewer.VerticalScrollMode="Enabled"
-                    x:Name="listview">
+                    x:Name="Listview">
                     <ListViewItem>1</ListViewItem>
                     <ListViewItem>2</ListViewItem>
                     <ListViewItem>4</ListViewItem>
@@ -151,12 +163,13 @@
                 </ListView>
             </SplitView.Pane>
             <SplitView.Content>
-                <Maps:MapControl
+                <maps:MapControl
                     x:Uid="mc"
-                    x:Name="map"
+                    x:Name="Map"
                     Height="Auto"
                     Margin="0,0,0,0"
-                    ZoomLevelChanged="map_ZoomLevelChanged"/>
+                    ZoomLevel="12"
+                    ZoomLevelChanged="Map_ZoomLevelChanged"/>
             </SplitView.Content>
         </SplitView>
     </RelativePanel>

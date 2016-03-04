@@ -13,14 +13,14 @@
 
         public Exception ResponseError { get; set; }
 
-        public bool IsError { get; set; } = false;
+        public bool IsError { get; set; }
 
-        public async static Task<PatternResponse> ParseResponse(string requestUrl)
+        public static async Task<PatternResponse> ParseResponse(string requestUrl)
         {
             XDocument xdoc = null;
             try
             {
-                var responseStream = await PAT_API.MakeRequest(requestUrl);
+                var responseStream = await PatApi.MakeRequest(requestUrl);
                 xdoc = XDocument.Load(responseStream);
                 return new PatternResponse()
                 {

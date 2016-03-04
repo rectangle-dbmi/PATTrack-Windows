@@ -1,4 +1,4 @@
-﻿namespace PATTrack.PATAPI
+﻿namespace PATTrack.PATAPI.POCO
 {
     using System;
 

@@ -14,14 +14,14 @@
 
         public Exception ResponseError { get; set; }
 
-        public bool IsError { get; set; } = false;
+        public bool IsError { get; set; }
 
-        public async static Task<VehicleResponse> ParseResponse(string requestUrl)
+        public static async Task<VehicleResponse> ParseResponse(string requestUrl)
         {
             XDocument xdoc = null;
             try
             {
-                var responseStream = await PAT_API.MakeRequest(requestUrl);
+                var responseStream = await PatApi.MakeRequest(requestUrl);
                 xdoc = XDocument.Load(responseStream);
                 return new VehicleResponse()
                 {
@@ -51,8 +51,8 @@
                 {
                     LoggingSingleton.Instance.Channel.LogMessage(xdoc.ToString(), LoggingLevel.Verbose);
                     ex.Data["XmlResponse"] = xdoc.ToString();
-
                 }
+
                 return new VehicleResponse() { ResponseError = ex, IsError = true };
             }
         }
